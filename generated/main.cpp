@@ -1,9 +1,10 @@
 #include <iostream>
+#include <stdio.h>
 
-void main () {
+int main () {
   int a = 5;
   int b = 10;
   int sum = a + b;
-  printf(sum);
+  printf("%i", sum);
 }
 

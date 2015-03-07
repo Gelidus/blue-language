@@ -19,7 +19,7 @@ module.exports = class Generator
     FileSystem.writeFileSync(fileName, fileContent)
 
   _generateIncludes: () ->
-    return "#include <iostream>"
+    return "#include <iostream>\n#include <stdio.h>"
 
   ###
     func = {
