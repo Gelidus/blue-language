@@ -14,6 +14,7 @@ module.exports = class Generator
 
     for func in tree
       fileContent += @generateFunction(func)
+      fileContent += "\n\n"
 
     FileSystem.writeFileSync(fileName, fileContent)
 
@@ -121,8 +122,14 @@ module.exports = class Generator
   generateExpression: (expr) ->
     expressionBuilder = ""
 
-    for expression in expr
-      expressionBuilder += "#{expression.value} "
+    for expression in expr.body
+      # indentation methods
+      if expression.type is "operator"
+        expressionBuilder += " #{expression.value} "
+      else if expression.type is "misc" # ,
+        expressionBuilder += "#{expression.value} "
+      else
+        expressionBuilder += "#{expression.value}"
 
     expressionBuilder = expressionBuilder.trim()
 

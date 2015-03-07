@@ -16,12 +16,15 @@ module.exports = class Synt
 
     loop
       returnType = @lex.getToken()
+      break if returnType is null
+
       functionName = @lex.getToken()
 
       func = {
         nodeType: "function"
         name: functionName.value
         returnType: returnType.value
+        indent: returnType.line.indent
       }
 
       func.parameters = @parseFunctionParameters(func)
@@ -30,7 +33,7 @@ module.exports = class Synt
       arrow = @lex.getToken()
 
       # parse whole body
-      func.body = @parseBody(func.body)
+      func.body = @parseBody(func.indent)
 
       # register function into body
       root.push(func)
@@ -61,83 +64,78 @@ module.exports = class Synt
 
     return parameters
 
-  parseBody: () ->
+  parseBody: (baseIndent) ->
     body = []
 
     loop
       any = @lex.markToken(true)
-      break if any is null
+      break if any is null or not any.line.indent > baseIndent
 
-      if any.type is "type" # variable declaration cause it's type
-        body.push(@parseVariableDeclaration())
-      else if any.type is "variable" and @lex.markToken().value is "("
-        body.push(@parseFunctionCall())
-      else if any.type is "keyword" and any.value is "return" # parse return
-        body.push(@parseReturn())
+      if any.type is "type"
+        body.push(@parseDeclarationStatement())
+      else if any.type is "variable" and @lex.markToken().value is "="
+        body.push(@parseAssignStatement())
+      else if any.type is "keyword" and any.value is "return"
+        body.push(@parseReturnStatemnt())
       else
-        console.log("Error on token: ")
-        console.dir(any)
-        break
+        body.push(@parseExpressionStatement())
 
     return body
 
-  parseVariableDeclaration: () ->
+  ###  Statements  ###
+
+  ###
+    (variable) = (expression)
+  ###
+  parseAssignStatement: () ->
+
+  ###
+    (type) (variable) [= (expression)]
+  ###
+  parseDeclarationStatement: () ->
     type = @lex.getToken()
     name = @lex.getToken()
-    assign = @lex.getToken()
-    banner = @parseExpression()
 
-    variable = {
+    vardecl = {
       nodeType: "vardecl"
       type: type.value
       name: name.value
-      expression: banner
+      expression: []
     }
 
-    return variable
+    assign = @lex.markToken()
+    if assign.type is "operator" and assign.value is "="
+      @lex.getToken() # retrieve marked token
+      vardecl.expression = @parseExpressionStatement()
 
-  parseFunctionCall: () ->
-    name = @lex.getToken()
-    leftBracket = @lex.getToken()
-    args = @parseFunctionArguments()
-    rightBracket = @lex.getToken()
+    return vardecl
 
-    return {
-      nodeType: "call"
-      name: name.value
-      args: args
+  ###
+    (expression)
+  ###
+  parseExpressionStatement: () ->
+    expression = {
+      nodeType: "expression"
+      body: []
     }
-
-  parseFunctionArguments: () ->
-    args = []
-
-    loop
-      expression = @parseExpression()
-      if expression.length isnt 0
-        args.push(expression)
-      # comma
-      separator = @lex.markToken(true)
-
-      break if separator.value is ")"
-
-    return args
-
-  parseExpression: () ->
-    expression = []
+    expressionLine = null
 
     state = "variable"
     loop
-      token = @lex.markToken()
+      token = @lex.markToken(true)
+
+      break if token is null or (expressionLine? and token.line.number isnt expressionLine)
 
       if state is "variable" and (token.type isnt "variable" and token.type isnt "number")
         break
 
-      if state is "operator" and (token.type isnt "operator")
+      if state is "operator" and (token.type isnt "operator" and token.type isnt "bracket" and token.type isnt "misc")
         break;
 
-      token = @lex.getToken() # retrieve the token from lex
+      expressionLine = expressionLine || token.line.number
+      token = @lex.getToken() # retrieve from marked tokens
 
-      expression.push({
+      expression.body.push({
         nodeType: "exprnode"
         type: token.type
         value: token.value
@@ -147,12 +145,17 @@ module.exports = class Synt
 
     return expression
 
-  parseReturn: () ->
+  ###
+    return (expression)
+  ###
+  parseReturnStatemnt: () ->
     ret = @lex.getToken()
 
-    expr = @parseExpression()
+    expr = @parseExpressionStatement()
 
     return {
       nodeType: "return"
       expression: expr
     }
+
+  ###              ###

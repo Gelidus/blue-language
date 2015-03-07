@@ -7,27 +7,9 @@ input = process.argv[2]
 output = process.argv[3]
 
 synt = new Synt(input)
-###
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-synt.lex.getToken()
-###
 generator = new Generator()
 
-generator.generate(synt.generateTree(), output)
+tree = synt.generateTree()
+require("fs").writeFileSync("./tree.json", JSON.stringify(tree, null, 2), "utf-8")
+
+generator.generate(tree, output)

@@ -12,6 +12,9 @@ module.exports = class Lex
     @indentation = 0
 
   getToken: (marked = true) ->
+    if @eof
+      return null
+
     if @content is null
       @content = FileSystem.readFileSync(@file)
 
@@ -29,22 +32,22 @@ module.exports = class Lex
         indent: @indentation
       }
     }
-    console.dir token
-
+    
     return token
 
   markToken: (marked = false) ->
     token = @getToken(marked)
-    @markedTokens.push(token)
+    @markedTokens.push(token) if token isnt null
 
     return token
 
   getTokenType: (token) ->
     if /\d+/.test(token) then return "number"
     if /\(|\)|\[|\]/.test(token) then return "bracket"
-    if /,|->|=|\+|\-/.test(token) then return "operator"
+    if /->|=|\+|\-/.test(token) then return "operator"
     if /^(void|int)$/.test(token) then return "type"
     if /^(return)$/.test(token) then return "keyword"
+    if /,/.test(token) then return "misc"
 
     return "variable"
 
