@@ -9,6 +9,7 @@ module.exports = class Lex
     @regex = /(\(|\)|\[|\]|,|->|=|\+|\-|\w+)/g
     @content = null
     @markedTokens = []
+    @indentation = 0
 
   getToken: (marked = true) ->
     if @content is null
@@ -23,9 +24,12 @@ module.exports = class Lex
     token = {
       value: token[0]
       type: @getTokenType(token[0])
-      line: @getLineFromIndex(token.index, @content)
-      indent: 0
+      line: {
+        number: @getLineFromIndex(token.index, @content)
+        indent: @indentation
+      }
     }
+    console.dir token
 
     return token
 
@@ -63,6 +67,24 @@ module.exports = class Lex
       else
         @lastMatch = match
 
+      # indentation calculation
+      matchIndentIndex = @lastMatch.index - 1
+      indent = 0
+      loop
+        break if matchIndentIndex < 0
+        if String.fromCharCode(@content[matchIndentIndex]) is "\n"
+          for i in [matchIndentIndex+1..@lastMatch.index]
+            if String.fromCharCode(@content[i]) isnt " "
+              matchIndentIndex = 0 # stop calculation
+              break;
+
+            indent++
+
+        matchIndentIndex--
+
+      @indentation = indent
+
+      # line calculation
       @lastLine++
       @getLineFromIndex(index) # recursive call to check forward lines
 

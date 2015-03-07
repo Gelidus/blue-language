@@ -6,6 +6,7 @@ module.exports = class Generator
   constructor: () ->
 
   generate: (tree, fileName) ->
+
     fileContent = ""
 
     # generate includes for language

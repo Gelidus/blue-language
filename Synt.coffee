@@ -19,9 +19,9 @@ module.exports = class Synt
       functionName = @lex.getToken()
 
       func = {
-        nodeType: "function",
-        name: functionName.value,
-        returnType: returnType.value,
+        nodeType: "function"
+        name: functionName.value
+        returnType: returnType.value
       }
 
       func.parameters = @parseFunctionParameters(func)
