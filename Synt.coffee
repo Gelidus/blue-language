@@ -13,25 +13,27 @@ module.exports = class Synt
     return root
 
   parseFunctions: (root) ->
-    returnType = @lex.getToken()
-    functionName = @lex.getToken()
 
-    func = {
-      nodeType: "function",
-      name: functionName.value,
-      returnType: returnType.value,
-    }
+    loop
+      returnType = @lex.getToken()
+      functionName = @lex.getToken()
 
-    func.parameters = @parseFunctionParameters(func)
+      func = {
+        nodeType: "function",
+        name: functionName.value,
+        returnType: returnType.value,
+      }
 
-    # -> operator
-    arrow = @lex.getToken()
+      func.parameters = @parseFunctionParameters(func)
 
-    # parse whole body
-    func.body = @parseBody(func.body)
+      # -> operator
+      arrow = @lex.getToken()
 
-    # register function into body
-    root.push(func)
+      # parse whole body
+      func.body = @parseBody(func.body)
+
+      # register function into body
+      root.push(func)
 
   parseFunctionParameters: (func) ->
     leftBracket = @lex.getToken()
@@ -44,15 +46,16 @@ module.exports = class Synt
 
       name = @lex.getToken()
 
-      comma = @lex.markToken()
-      break if comma.value is ")"
-      @lex.getToken() # remote comma from front
-
+      # create parameter object
       parameters.push({
         nodeType: "funcparam"
         type: type.value
         name: name.value
       })
+
+      comma = @lex.markToken()
+      break if comma.value is ")"
+      @lex.getToken() # remote comma from front
 
     rightBracket = @lex.getToken()
 
@@ -69,6 +72,8 @@ module.exports = class Synt
         body.push(@parseVariableDeclaration())
       else if any.type is "variable" and @lex.markToken().value is "("
         body.push(@parseFunctionCall())
+      else if any.type is "keyword" and any.value is "return" # parse return
+        body.push(@parseReturn())
       else
         console.log("Error on token: ")
         console.dir(any)
@@ -141,3 +146,13 @@ module.exports = class Synt
       state = if state is "variable" then "operator" else "variable"
 
     return expression
+
+  parseReturn: () ->
+    ret = @lex.getToken()
+
+    expr = @parseExpression()
+
+    return {
+      nodeType: "return"
+      expression: expr
+    }

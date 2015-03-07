@@ -24,6 +24,7 @@ module.exports = class Lex
       value: token[0]
       type: @getTokenType(token[0])
       line: @getLineFromIndex(token.index, @content)
+      indent: 0
     }
 
     return token
@@ -39,17 +40,30 @@ module.exports = class Lex
     if /\(|\)|\[|\]/.test(token) then return "bracket"
     if /,|->|=|\+|\-/.test(token) then return "operator"
     if /^(void|int)$/.test(token) then return "type"
+    if /^(return)$/.test(token) then return "keyword"
 
     return "variable"
 
-  getLineFromIndex: (index, input) ->
-    regex = /\n/g
-    line = 1
+  ###
+    @variable content [String] is input content
+  ###
+  getLineFromIndex: (index) ->
+    @lineMatcher = @lineMatcher || /\n/g
+    @lastLine = @lastLine || 1
 
-    loop
-      match = regex.exec(input)
-      break if not match? or match.index > index
+    if @eof isnt true
+      @lastMatch = @lastMatch || @lineMatcher.exec(@content)
 
-      line++
+    if @eof or index < @lastMatch.index
+      return @lastLine
+    else
+      match = @lineMatcher.exec(@content)
+      if not @eof and match is null
+        @eof = true
+      else
+        @lastMatch = match
 
-    return line
+      @lastLine++
+      @getLineFromIndex(index) # recursive call to check forward lines
+
+    return @lastLine

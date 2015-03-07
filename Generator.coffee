@@ -29,8 +29,8 @@ module.exports = class Generator
     indentation = 2
 
     functionParameters = ""
-    functionParameters += "#{param}" for param in func.parameters
-    functionParameters = functionParameters.trim()
+    functionParameters += "#{param.type} #{param.name}, " for param in func.parameters
+    functionParameters = functionParameters.trim().slice(0, -1) # get rid of last comma
 
     # function header
     functionBuilder += "#{func.returnType} #{func.name} (#{functionParameters}) {\n"
@@ -63,6 +63,7 @@ module.exports = class Generator
     for node in body
       lines.push(@generateVarDeclaration(node)) if node.nodeType is "vardecl"
       lines.push(@generateFunctionCall(node)) if node.nodeType is "call"
+      lines.push(@generateReturn(node)) if node.nodeType is "return"
 
     return lines
 
@@ -103,6 +104,13 @@ module.exports = class Generator
     callBuilder += ";"
 
     return callBuilder
+
+  generateReturn: (ret) ->
+    returnBuilder = ""
+
+    returnBuilder += "return #{@generateExpression(ret.expression)};"
+
+    return returnBuilder
 
   ###
     expr = []{
