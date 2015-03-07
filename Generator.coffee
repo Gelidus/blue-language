@@ -25,6 +25,7 @@ module.exports = class Generator
   ###
   generateFunction: (func) ->
     functionBuilder = ""
+    indentation = 2
 
     functionParameters = ""
     functionParameters += "#{param}" for param in func.parameters
@@ -36,7 +37,10 @@ module.exports = class Generator
     # function body, this is array of lines
     body = @generateBody(func.body)
     for line in body
-      functionBuilder += "#{line}\n"
+      functionBuilder += " ".repeat(indentation) + "#{line}\n"
+
+    # trim newlines
+    functionBuilder = functionBuilder.trim("\n")
 
     # function tail
     functionBuilder += "\n}"
@@ -53,7 +57,7 @@ module.exports = class Generator
     ###
       node = {
         nodeType: vardecl [ type, name, expression ], call [ name, args ]
-      }
+      } 
     ###
     for node in body
       lines.push(@generateVarDeclaration(node)) if node.nodeType is "vardecl"

@@ -1,3 +1,5 @@
+require("./util") # utils
+
 Synt = require("./Synt")
 Generator = require("./Generator")
 
