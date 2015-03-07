@@ -66,6 +66,7 @@ module.exports = class Generator
       lines.push(@generateVarDeclaration(node)) if node.nodeType is "vardecl"
       lines.push(@generateFunctionCall(node)) if node.nodeType is "call"
       lines.push(@generateReturn(node)) if node.nodeType is "return"
+      lines.push(@generateExpression(node)) if node.nodeType is "expression"
 
     return lines
 
@@ -86,26 +87,6 @@ module.exports = class Generator
     vardeclBuilder += ";"
 
     return vardeclBuilder
-
-  ###
-    call = {
-      name, args = [][]{ nodeType="exprnode", type, value }
-    }
-  ###
-  generateFunctionCall: (call) ->
-    callBuilder = ""
-
-    if call.name is "print" # cout for now
-      callBuilder += "std::cout "
-
-    for arg in call.args
-      expression = @generateExpression(arg)
-      callBuilder += "<< #{expression} "
-
-    callBuilder = callBuilder.trim()
-    callBuilder += ";"
-
-    return callBuilder
 
   generateReturn: (ret) ->
     returnBuilder = ""

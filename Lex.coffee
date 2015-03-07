@@ -6,23 +6,26 @@ module.exports = class Lex
     @init()
 
   init: () ->
-    @regex = /(\(|\)|\[|\]|,|->|=|\+|\-|\w+)/g
+    @regex = /(\(|\)|\[|\]|\".*\"|,|->|=|\+|\-|\w+)/g
     @content = null
     @markedTokens = []
     @indentation = 0
+    @tokenEof = false
 
   getToken: (marked = true) ->
-    if @eof
-      return null
-
     if @content is null
       @content = FileSystem.readFileSync(@file)
+
+    if @tokenEof and not (marked and @markedTokens.length isnt 0)
+      return null
 
     if marked and @markedTokens.length isnt 0
       return @markedTokens.shift() # get marked token
 
     token = @regex.exec(@content)
-    return null if token is null
+    if token is null
+      @tokenEof = true
+      return null
 
     token = {
       value: token[0]
@@ -37,12 +40,16 @@ module.exports = class Lex
 
   markToken: (marked = false) ->
     token = @getToken(marked)
-    @markedTokens.push(token) if token isnt null
+    if marked and token isnt null
+      @markedTokens.unshift(token)
+    else if token isnt null
+      @markedTokens.push(token)
 
     return token
 
   getTokenType: (token) ->
     if /\d+/.test(token) then return "number"
+    if /^(\".*\")$/.test(token) then return "string"
     if /\(|\)|\[|\]/.test(token) then return "bracket"
     if /->|=|\+|\-/.test(token) then return "operator"
     if /^(void|int)$/.test(token) then return "type"
@@ -71,12 +78,12 @@ module.exports = class Lex
         @lastMatch = match
 
       # indentation calculation
-      matchIndentIndex = @lastMatch.index - 1
+      matchIndentIndex = if not match? then @content.length - 1 else @lastMatch.index - 1
       indent = 0
       loop
-        break if matchIndentIndex < 0
-        if String.fromCharCode(@content[matchIndentIndex]) is "\n"
-          for i in [matchIndentIndex+1..@lastMatch.index]
+        break if matchIndentIndex < 0 # break on end
+        if String.fromCharCode(@content[matchIndentIndex]) is "\n" # find nearest newline
+          for i in [matchIndentIndex+1..@lastMatch.index] # match spaces from newline
             if String.fromCharCode(@content[i]) isnt " "
               matchIndentIndex = 0 # stop calculation
               break;

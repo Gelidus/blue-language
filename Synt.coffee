@@ -73,7 +73,7 @@ module.exports = class Synt
 
       if any.type is "type"
         body.push(@parseDeclarationStatement())
-      else if any.type is "variable" and @lex.markToken().value is "="
+      else if any.type is "variable" and @lex.markToken()? and @lex.markToken().value is "="
         body.push(@parseAssignStatement())
       else if any.type is "keyword" and any.value is "return"
         body.push(@parseReturnStatemnt())
@@ -126,10 +126,10 @@ module.exports = class Synt
 
       break if token is null or (expressionLine? and token.line.number isnt expressionLine)
 
-      if state is "variable" and (token.type isnt "variable" and token.type isnt "number")
+      if state is "variable" and (token.type not in ["variable", "number", "string"])
         break
 
-      if state is "operator" and (token.type isnt "operator" and token.type isnt "bracket" and token.type isnt "misc")
+      if state is "operator" and (token.type not in ["operator", "bracket", "misc"])
         break;
 
       expressionLine = expressionLine || token.line.number

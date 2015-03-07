@@ -8,4 +8,4 @@ void main () ->
 
   int sum = add(a, b)
   
-  print(sum)
+  printf(sum)
