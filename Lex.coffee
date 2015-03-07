@@ -20,7 +20,12 @@ module.exports = class Lex
     token = @regex.exec(@content)
     return null if token is null
 
-    token = { value: token[0], type: @getTokenType(token[0]) }
+    token = {
+      value: token[0]
+      type: @getTokenType(token[0])
+      line: @getLineFromIndex(token.index, @content)
+    }
+
     return token
 
   markToken: (marked = false) ->
@@ -36,3 +41,15 @@ module.exports = class Lex
     if /^(void|int)$/.test(token) then return "type"
 
     return "variable"
+
+  getLineFromIndex: (index, input) ->
+    regex = /\n/g
+    line = 1
+
+    loop
+      match = regex.exec(input)
+      break if not match? or match.index > index
+
+      line++
+
+    return line
