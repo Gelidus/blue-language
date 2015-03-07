@@ -66,7 +66,7 @@ module.exports = class Generator
       lines.push(@generateVarDeclaration(node)) if node.nodeType is "vardecl"
       lines.push(@generateFunctionCall(node)) if node.nodeType is "call"
       lines.push(@generateReturn(node)) if node.nodeType is "return"
-      lines.push(@generateExpression(node)) if node.nodeType is "expression"
+      lines.push(@generateExpression(node) + ";") if node.nodeType is "expression"
 
     return lines
 
