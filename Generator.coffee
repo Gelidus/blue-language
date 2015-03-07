@@ -8,6 +8,7 @@ module.exports = class Generator
   generate: (tree, fileName) ->
     fileContent = ""
 
+    # generate includes for language
     fileContent += @_generateIncludes() + "\n\n"
 
     for func in tree

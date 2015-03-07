@@ -37,6 +37,22 @@ module.exports = class Synt
     leftBracket = @lex.getToken()
 
     parameters = []
+    loop
+      type = @lex.markToken()
+      break if type.value is ")" # break on right bracket
+      @lex.getToken() # remove type token from front
+
+      name = @lex.getToken()
+
+      comma = @lex.markToken()
+      break if comma.value is ")"
+      @lex.getToken() # remote comma from front
+
+      parameters.push({
+        nodeType: "funcparam"
+        type: type.value
+        name: name.value
+      })
 
     rightBracket = @lex.getToken()
 
@@ -54,7 +70,8 @@ module.exports = class Synt
       else if any.type is "variable" and @lex.markToken().value is "("
         body.push(@parseFunctionCall())
       else
-        console.log "error"
+        console.log("Error on token: ")
+        console.dir(any)
         break
 
     return body

@@ -3,7 +3,10 @@ require("./util") # utils
 Synt = require("./Synt")
 Generator = require("./Generator")
 
-synt = new Synt("./lang/main.blue")
+input = process.argv[2]
+output = process.argv[3]
 
-generator = new Generator("./lang/main.bblue")
-generator.generate(synt.generateTree(), "#{__dirname}/generated/main.cpp")
+synt = new Synt(input)
+generator = new Generator()
+
+generator.generate(synt.generateTree(), output)
