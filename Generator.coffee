@@ -12,12 +12,12 @@ module.exports = class Generator
     # generate includes for language
     fileContent += @_generateIncludes() + "\n\n"
 
-    for func in tree
+    for func in tree.entities
       fileContent += @generateFunction(func)
       fileContent += "\n\n"
 
     FileSystem.writeFileSync(fileName, fileContent)
-
+    
   _generateIncludes: () ->
     return "#include <iostream>\n#include <stdio.h>"
 

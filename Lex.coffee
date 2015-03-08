@@ -6,7 +6,7 @@ module.exports = class Lex
     @init()
 
   init: () ->
-    @regex = /(\(|\)|\[|\]|\".*\"|,|->|=|\+|\-|\w+)/g
+    @regex = /(\(|\)|\[|\]|\".*\"|,|:|->|=|\+|\-|\/|\*|\w+)/g
     @content = null
     @markedTokens = []
     @indentation = 0
@@ -51,10 +51,10 @@ module.exports = class Lex
     if /\d+/.test(token) then return "number"
     if /^(\".*\")$/.test(token) then return "string"
     if /\(|\)|\[|\]/.test(token) then return "bracket"
-    if /->|=|\+|\-/.test(token) then return "operator"
+    if /->|=|\+|\-|\/|\*/.test(token) then return "operator"
     if /^(void|int)$/.test(token) then return "type"
-    if /^(return)$/.test(token) then return "keyword"
-    if /,/.test(token) then return "misc"
+    if /^(return|import)$/.test(token) then return "keyword"
+    if /,|:/.test(token) then return "misc"
 
     return "variable"
 

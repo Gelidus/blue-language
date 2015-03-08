@@ -6,37 +6,31 @@ module.exports = class Synt
     @lex = new Lex(file)
 
   generateTree: () ->
-    root = [] # generate tree root
-
-    @parseFunctions(root) # parse functions
-
-    return root
-
-  parseFunctions: (root) ->
+    tree = {
+      imports: []
+      entities: []
+    }
 
     loop
-      returnType = @lex.getToken()
-      break if returnType is null
+      # parse next entity
+      entity = @parseEntity()
+      break if not entity?
 
-      functionName = @lex.getToken()
+      switch entity.nodeType
+        when "function" then tree.entities.push(entity)
+        when "import" then tree.imports.push(entity)
 
-      func = {
-        nodeType: "function"
-        name: functionName.value
-        returnType: returnType.value
-        indent: returnType.line.indent
-      }
+    return tree
 
-      func.parameters = @parseFunctionParameters(func)
+  parseEntity: () ->
+    first = @lex.markToken(true)
 
-      # -> operator
-      arrow = @lex.getToken()
+    return null if not first?
 
-      # parse whole body
-      func.body = @parseBody(func.indent)
-
-      # register function into body
-      root.push(func)
+    if first.type is "keyword" and first.value is "import"
+      return @parseImportStatement()
+    else if first.type is "type"
+      return @parseFunctionStatement()
 
   parseFunctionParameters: (func) ->
     leftBracket = @lex.getToken()
@@ -83,6 +77,48 @@ module.exports = class Synt
     return body
 
   ###  Statements  ###
+
+  parseImportStatement: () ->
+    include = @lex.getToken() # import token
+    name = @lex.getToken()
+
+    include = {
+      nodeType: "import"
+      name: name.value
+    }
+
+    option = @lex.markToken(true)
+    if option.type is "misc" and option.value is ":"
+      option = @lex.getToken()
+      include.option = "unpacked" # import all to current namespace "std:print"
+    else
+      include.option = "packed" # import all and stay in package "print"
+
+    return include
+
+  parseFunctionStatement: () ->
+    returnType = @lex.getToken()
+
+    return if returnType is null
+
+    functionName = @lex.getToken()
+
+    func = {
+      nodeType: "function"
+      name: functionName.value
+      returnType: returnType.value
+      indent: returnType.line.indent
+    }
+
+    func.parameters = @parseFunctionParameters(func)
+
+    # -> operator
+    arrow = @lex.getToken()
+
+    # parse whole body
+    func.body = @parseBody(func.indent)
+
+    return func
 
   ###
     (variable) = (expression)
