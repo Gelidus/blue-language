@@ -4,6 +4,7 @@ module.exports = class Synt
 
   constructor: (file) ->
     @lex = new Lex(file)
+    @syntaxData = { properties: [] }
 
   generateTree: () ->
     tree = {
@@ -15,6 +16,14 @@ module.exports = class Synt
       # parse next entity
       entity = @parseEntity()
       break if not entity?
+
+      # assign properties that were assembled before
+      if entity.nodeType is "properties"
+        @syntaxData.properties = entity.values
+        continue
+      else
+        entity.properties = @syntaxData.properties
+        @syntaxData.properties = []
 
       switch entity.nodeType
         when "function" then tree.entities.push(entity)
@@ -31,6 +40,8 @@ module.exports = class Synt
       return @parseImportStatement()
     else if first.type is "type"
       return @parseFunctionStatement()
+    else if first.type is "operator" and first.value is "@"
+      return @parsePropertyStatements()
 
   parseFunctionParameters: (func) ->
     leftBracket = @lex.getToken()
@@ -78,6 +89,9 @@ module.exports = class Synt
 
   ###  Statements  ###
 
+  ###
+    import (variable)[:]
+  ###
   parseImportStatement: () ->
     include = @lex.getToken() # import token
     name = @lex.getToken()
@@ -96,6 +110,38 @@ module.exports = class Synt
 
     return include
 
+  ###
+    @(variable) [([option[=value]], ...)]
+  ###
+  parsePropertyStatements: () ->
+    properties = {
+      nodeType: "properties"
+      values: []
+    }
+    
+    loop
+      at = @lex.getToken()
+      name = @lex.getToken()
+
+      property = {
+        nodeType: "property"
+        name: name.value
+        options: { }
+      }
+
+      properties.values.push(property)
+
+      bracket = @lex.markToken(true)
+      continue if bracket.type is "operator" and bracket.value is "@" # next property
+      break if bracket.type isnt "bracket" and bracket.value isnt "(" # continue with scan
+
+      # TODO: parse expressions from properties 
+
+    return properties
+
+  ###
+    (type) (variable) ([variable, ...]) ->
+  ###
   parseFunctionStatement: () ->
     returnType = @lex.getToken()
 
@@ -157,6 +203,7 @@ module.exports = class Synt
     expressionLine = null
 
     state = "variable"
+    numberOfBrackets = 0
     loop
       token = @lex.markToken(true)
 
