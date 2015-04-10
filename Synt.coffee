@@ -36,11 +36,11 @@ module.exports = class Synt
 
     return null if not first?
 
-    if first.type is "keyword" and first.value is "import"
+    if first.type is "keyword" and first.value is "import" # import
       return @parseImportStatement()
-    else if first.type is "type"
+    else if first.type is "type" # function
       return @parseFunctionStatement()
-    else if first.type is "operator" and first.value is "@"
+    else if first.type is "operator" and first.value is "@" # property
       return @parsePropertyStatements()
 
   parseFunctionParameters: (func) ->
@@ -99,14 +99,17 @@ module.exports = class Synt
     include = {
       nodeType: "import"
       name: name.value
+      option: "packed"
+      body: { }
     }
 
     option = @lex.markToken(true)
     if option.type is "misc" and option.value is ":"
       option = @lex.getToken()
       include.option = "unpacked" # import all to current namespace "std:print"
-    else
-      include.option = "packed" # import all and stay in package "print"
+
+    importAnalyser = new Synt("#{__dirname}/libs/cpp/#{include.name}.blue")
+    importTree = importAnalyser.generateTree()
 
     return include
 
