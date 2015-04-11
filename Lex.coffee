@@ -52,7 +52,7 @@ module.exports = class Lex
     if /^(\".*\")$/.test(token) then return "string"
     if /\(|\)|\[|\]/.test(token) then return "bracket"
     if /->|=|\+|\-|\/|\*|\@/.test(token) then return "operator"
-    if /^(void|int)$/.test(token) then return "type"
+    if /^(void|int|float|string)$/.test(token) then return "type"
     if /^(return|import)$/.test(token) then return "keyword"
     if /,|:/.test(token) then return "misc"
 
