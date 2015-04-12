@@ -123,7 +123,10 @@ module.exports = class Synt
     }
     
     loop
-      at = @lex.getToken()
+      at = @lex.markToken(true)
+      break if at.value isnt "@"
+      @lex.getToken() # get @
+
       name = @lex.getToken()
 
       property = {
@@ -138,9 +141,40 @@ module.exports = class Synt
       continue if bracket.type is "operator" and bracket.value is "@" # next property
       break if bracket.type isnt "bracket" and bracket.value isnt "(" # continue with scan
 
-      # TODO: parse expressions from properties 
+      bracket = @lex.getToken() # get actual bracket
+
+      loop # inner loop for properties
+        propertyToken = @lex.markToken(true)
+        break if propertyToken.value is ")" # break on right bracket
+
+        if propertyToken.value is ","
+          propertyToken = @lex.getToken() # retrieve
+
+        [propertyName, propertyExpression] = @parsePropertyStatement()
+        property.options[propertyName] = propertyExpression
+
+      rightBracket = @lex.getToken()
+
+    console.log "Block"
+    for property in properties.values
+      console.dir property
 
     return properties
+
+  ###
+    (variable)[ = (expression)]
+  ###
+  parsePropertyStatement: () ->
+    propertyName = @lex.getToken()
+    assign = @lex.markToken(true)
+
+    if assign.value isnt "="
+      return [propertyName.value, true]
+
+    assign = @lex.getToken()
+    propertyExpression = @parseExpressionStatement()
+
+    return [propertyName.value, propertyExpression]
 
   ###
     (type) (variable) ([variable, ...]) ->
@@ -215,7 +249,7 @@ module.exports = class Synt
       if state is "variable" and (token.type not in ["variable", "number", "string"])
         break
 
-      if state is "operator" and (token.type not in ["operator", "bracket", "misc"])
+      if state is "operator" and (token.type not in ["operator", "bracket", "misc"]) and token.value isnt ","
         break;
 
       expressionLine = expressionLine || token.line.number
