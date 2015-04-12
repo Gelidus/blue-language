@@ -265,6 +265,34 @@ module.exports = class Synt
 
     return expression
 
+  parseByShuntingYard: () ->
+    outputQueue = []
+    operatorStack = []
+
+    loop
+      token = @lex.markToken(true)
+
+      if token.type is "number" or token.type is "variable"
+        outputQueue.push(token)
+      else if token.type is "operator"
+        operatorStack.push(token)
+      else if token.type is "bracket" and token.value is "("
+        operatorStack.push(token)
+      else if token.type is "bracket" and token.value is ")"
+        loop
+          stackTop = operatorStack.pop()
+          break if stackTop.type is "bracket" and token.value is "("
+          # mismatch on parenthesis if not found
+          throw new Error("Expression parsing error: mismatched parenthesis") if operatorStack.length is 0
+
+          outputQueue.push(stackTop)
+
+  getOperatorPrecendence: (token) ->
+    throw new Error("Token is not operator") if token.type isnt "operator"
+
+    return 2 if token.value in ["+", "-"]
+    return 3 if token.value in ["*", "/"]
+
   ###
     return (expression)
   ###
