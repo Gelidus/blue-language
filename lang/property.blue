@@ -1,7 +1,16 @@
 import std:
 
-@main
-@link
+@nope()
+@lol
+@strict(all)
+int func(int a, int b) ->
+  return a + b
+
+@lift(sails = 2, dock = "global")
+float ffunc(float a, float b) ->
+  return a - b
+
+@entry
 int main () ->
   int a = 5
   int b = 6
