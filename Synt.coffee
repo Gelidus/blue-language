@@ -233,7 +233,8 @@ module.exports = class Synt
     (expression)
   ###
   parseExpressionStatement: () ->
-    expression = {
+    @parseByShuntingYard()
+    ###expression = {
       nodeType: "expression"
       body: []
     }
@@ -263,7 +264,7 @@ module.exports = class Synt
 
       state = if state is "variable" then "operator" else "variable"
 
-    return expression
+    return expression###
 
   parseByShuntingYard: () ->
     outputQueue = []
