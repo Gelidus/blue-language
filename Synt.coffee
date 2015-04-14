@@ -326,6 +326,9 @@ module.exports = class Synt
 
     loop
       token = @lex.markToken(true)
+      [..., lastToken] = expression.body
+      break if lastToken? and token? and (token.type is lastToken.type or (token.type in ["number", "string", "variable"] and lastToken.type in ["number", "string", "variable"]))# same types
+
       break if not token? # no more tokens
       break if token.type in ["keyword", "misc", "type"] or token.value in [",", "@"] # unavaliable operators and type
       break if token.type is "bracket" and token.value is ")" and bracketsCount is 0
