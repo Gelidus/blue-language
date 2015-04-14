@@ -12,8 +12,6 @@ module.exports = class Lex
     @indentation = 0
     @tokenEof = false
 
-    @lastMatch = { index: 1 }
-
   getToken: (marked = true) ->
     if @content is null
       @content = FileSystem.readFileSync(@file)
