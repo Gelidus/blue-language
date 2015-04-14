@@ -42,6 +42,8 @@ module.exports = class Synt
       return @parseFunctionStatement()
     else if first.type is "operator" and first.value is "@" # property
       return @parsePropertyStatements()
+    else
+      throw new Error("Unexpected token #{first.value} on #{first.line.number}:#{first.line.indent}")
 
   parseFunctionParameters: (func) ->
     leftBracket = @lex.getToken()
@@ -233,7 +235,7 @@ module.exports = class Synt
     (expression)
   ###
   parseExpressionStatement: () ->
-    @parseByShuntingYard()
+    @parseExpressionByBasic()
     ###expression = {
       nodeType: "expression"
       body: []
@@ -266,7 +268,8 @@ module.exports = class Synt
 
     return expression###
 
-  parseByShuntingYard: () ->
+  # @bugged
+  parseExpressionByShuntingYard: () ->
     outputQueue = []
     operatorStack = []
 
@@ -283,7 +286,7 @@ module.exports = class Synt
       break if exit #exit from algorithm
 
       token = @lex.markToken(true)
-      break if not token?
+      break if not token? or (expression.body.length > 1 and token.type is expression.body[expression.body.length-1].type)
 
       if token.type is "number" or token.type is "variable"
         outputQueue.push(token)
@@ -301,10 +304,37 @@ module.exports = class Synt
           if operatorStack.length is 0
             exit = true
             break
+      else
+        exit = true # unknown token
+        break
 
       if not exit # found token that does not belong
         pushToken(token)
         @lex.getToken() # get token from que
+
+    return expression
+
+  parseExpressionByBasic: () ->
+    expression = {
+      nodeType: "expression"
+      body: []
+    }
+
+    bracketsCount = 0 # count of brackets
+
+    pushToken = (token) -> expression.body.push({ nodeType: "exprnode", type: token.type, value: token.value })
+
+    loop
+      token = @lex.markToken(true)
+      break if not token? # no more tokens
+      break if token.type in ["keyword", "misc", "type"] or token.value in [",", "@"] # unavaliable operators and type
+      break if token.type is "bracket" and token.value is ")" and bracketsCount is 0
+
+      # use bracket counter to validate brackets
+      bracketsCount-- if token.type is "bracket" and token.value is ")"
+      bracketsCount++ if token.type is "bracket" and token.value is "("
+
+      pushToken(@lex.getToken()) # retrieve token
 
     return expression
 
