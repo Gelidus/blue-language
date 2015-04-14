@@ -17,6 +17,6 @@ require("fs").writeFileSync("./tree.json", JSON.stringify(tree, null, 2), "utf-8
 output = generator.generate(tree)
 
 if args["o"]?
-  FileSystem.writeFileSync(output, args["o"])
+  FileSystem.writeFileSync(args["o"], output)
 else
   console.log(output)
