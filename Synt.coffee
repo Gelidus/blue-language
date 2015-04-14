@@ -270,8 +270,20 @@ module.exports = class Synt
     outputQueue = []
     operatorStack = []
 
+    expression = {
+      nodeType: "expression"
+      body: []
+    }
+
+    exit = false
+
+    pushToken = (token) -> expression.body.push({ nodeType: "exprnode", type: token.type, value: token.value })
+
     loop
+      break if exit #exit from algorithm
+
       token = @lex.markToken(true)
+      break if not token?
 
       if token.type is "number" or token.type is "variable"
         outputQueue.push(token)
@@ -284,15 +296,25 @@ module.exports = class Synt
           stackTop = operatorStack.pop()
           break if stackTop.type is "bracket" and token.value is "("
           # mismatch on parenthesis if not found
-          throw new Error("Expression parsing error: mismatched parenthesis") if operatorStack.length is 0
-
           outputQueue.push(stackTop)
+
+          if operatorStack.length is 0
+            exit = true
+            break
+
+      if not exit # found token that does not belong
+        pushToken(token)
+        @lex.getToken() # get token from que
+
+    return expression
 
   getOperatorPrecendence: (token) ->
     throw new Error("Token is not operator") if token.type isnt "operator"
 
     return 2 if token.value in ["+", "-"]
     return 3 if token.value in ["*", "/"]
+
+    throw new Error("Unrecognized token specified #{token.type}:#{token.value}")
 
   ###
     return (expression)
