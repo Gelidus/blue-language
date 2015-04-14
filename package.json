@@ -1,0 +1,28 @@
+{
+  "name": "blue-language",
+  "version": "0.0.1-a",
+  "description": "",
+  "main": "gen.coffee",
+  "dependencies": {
+    "minimist": "^1.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gelidus/blue-language.git"
+  },
+  "keywords": [
+    "compiler",
+    "blue",
+    "language"
+  ],
+  "author": "Gelidus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Gelidus/blue-language/issues"
+  },
+  "homepage": "https://github.com/Gelidus/blue-language"
+}
