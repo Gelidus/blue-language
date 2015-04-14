@@ -1,11 +1,10 @@
-FileSystem = require("fs")
 Synt = require("./Synt")
 
 module.exports = class Generator
 
   constructor: () ->
 
-  generate: (tree, fileName) ->
+  generate: (tree) ->
 
     fileContent = ""
 
@@ -16,7 +15,7 @@ module.exports = class Generator
       fileContent += @generateFunction(func)
       fileContent += "\n\n"
 
-    FileSystem.writeFileSync(fileName, fileContent)
+    return fileContent
     
   _generateIncludes: () ->
     return "#include <iostream>\n#include <stdio.h>"
